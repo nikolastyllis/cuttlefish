@@ -10,28 +10,40 @@
 #define DOMAIN AF_INET
 #define TYPE SOCK_STREAM
 #define PROTOCAL 0
+#define SERVER_LOOP while(1)
 
-int main(int argc, char* argv[]) {
-	
-	char buffer[BUFF_SIZE];
-    	struct sockaddr_in address;
+void initAddress(struct sockaddr_in* address, char* port) {
+	address->sin_family = DOMAIN;
+	address->sin_addr.s_addr = INADDR_ANY;
+    address->sin_port = htons(atoi(port));	
+}
+
+int main(int argc, char** argv) {
+
+	//Initialise address
+    struct sockaddr_in address;
+	initAddress(&address, argv[1]);
+
+	//Get size of an address
 	socklen_t addrlen = sizeof(struct sockaddr_in);
-	int port = (int) *argv[2];
-	char* host = argv[1];
-	char* hello = "Hello\n";
 
-	address.sin_family = DOMAIN;
-	address.sin_addr.s_addr = htonl(INADDR_ANY);
-    	address.sin_port = htons(port);	
-	
+	//Initialise buffers
+	char buffer[BUFF_SIZE];
+	char* hello = "Server says hello!\n";
+
+	//Create socket
 	int proxyfd = socket(DOMAIN, TYPE, PROTOCAL);
+
+	//Bind to port
 	int bind_attempt = bind(proxyfd, (struct sockaddr*)&address, addrlen);
 	if(bind_attempt) perror("Binding to port failed");	
 	
-	int listen_attempt = listen(proxyfd, 10);
+	//Begin listening
+	int listen_attempt = listen(proxyfd, 0);
 	if(listen_attempt) perror("Failed to listen");
 	
-	while(1) {
+	//Main server loop
+	SERVER_LOOP {
 		int client = accept(proxyfd, (struct sockaddr*)&address, &addrlen);
 		if(client<0) perror("Failes to accept connection");
 		
@@ -43,6 +55,6 @@ int main(int argc, char* argv[]) {
 		close(client);
 	}
 
-    	shutdown(proxyfd, SHUT_RDWR);
-    	return 0;
+	shutdown(proxyfd, SHUT_RDWR);
+	return 0;
 }	
