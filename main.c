@@ -44,14 +44,15 @@ int main(int argc, char** argv) {
 	
 	//Main server loop
 	SERVER_LOOP {
+		memset(buffer, 0, BUFF_SIZE);
+
 		int client = accept(proxyfd, (struct sockaddr*)&address, &addrlen);
 		if(client<0) perror("Failes to accept connection");
-		
-		send(client, hello, strlen(hello), 0);
-		
-		read(client, buffer, BUFF_SIZE);
-		printf("Recieved message: %s\n", buffer);
+			
+		recv(client, buffer, BUFF_SIZE, 0);
+		printf("%s\n", buffer);
 
+		send(client, hello, strlen(hello), 0);
 		close(client);
 	}
 
